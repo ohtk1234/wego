@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+  
+  <mapper namespace = "org.zerock.wego.mapper.PartyMapper">
+  
+  	<select id="selectTotalCountByQuery"
+		resultType="java.lang.Double">
+		SELECT count(san_party_id)
+		FROM san_party_v
+		WHERE
+			san_party_id > 0
+			AND
+			(
+			title LIKE '%'||#{query}||'%'
+			OR contents LIKE '%'||#{query}||'%'
+			)
+	</select>
+	
+  	<select id="selectAll"
+		resultType="org.zerock.wego.domain.party.PartyViewVO">
+		SELECT * 
+		FROM san_party_v 
+		ORDER BY created_dt DESC
+	</select>
+  	
+  	<select id="selectAllOrderByNewest"
+		resultType="org.zerock.wego.domain.party.PartyViewSortVO">
+		SELECT * 
+		FROM san_party_v_newest
+		<if test="sortNum != null">
+        	WHERE sort_num &gt; #{sortNum}
+		</if>
+   		OFFSET ( #{page} - 1 ) * #{amount} ROWS
+      	FETCH NEXT #{amount} ROWS ONLY
+	</select>
+	
+	<select id="selectAllOrderByOldest"
+		resultType="org.zerock.wego.domain.party.PartyViewSortVO">
+		SELECT * 
+		FROM san_party_v_oldest
+		<if test="sortNum != null">
+        	WHERE sort_num &gt; #{sortNum}
+		</if>
+   		OFFSET ( #{page} - 1 ) * #{amount} ROWS
+      	FETCH NEXT #{amount} ROWS ONLY
+	</select>
+	
+	<select id="selectAllOrderByLike"
+		resultType="org.zerock.wego.domain.party.PartyViewSortVO">
+		SELECT * 
+		FROM san_party_v_like
+		<if test="sortNum != null">
+        	WHERE sort_num &gt; #{sortNum}
+		</if>
+   		OFFSET ( #{page} - 1 ) * #{amount} ROWS
+      	FETCH NEXT #{amount} ROWS ONLY
+	</select>
+	
+	<select id="selectSearchPartyByQueryOrderByNewest"
+		resultType="org.zerock.wego.domain.party.PartyViewSortVO">
+		SELECT *
+		FROM san_party_v_newest
+		WHERE
+			(
+			san_name LIKE '%'||#{query}||'%'
+			OR title LIKE '%'||#{query}||'%'
+			OR contents LIKE '%'||#{query}||'%'
+			)
+			<if test="sortNum != null">
+        	AND sort_num &gt; #{sortNum}
+			</if>
+   		OFFSET ( #{page} - 1 ) * #{amount} ROWS
+      	FETCH NEXT #{amount} ROWS ONLY
+	</select>
+	
+	<!-- <select id="selectSearchPartyByQueryOrderByOldest"
+		resultType="org.zerock.wego.domain.party.PartyViewSortVO">
+		SELECT *
+		FROM san_party_v_oldest
+		WHERE
+			(
+			title LIKE '%'||#{search}||'%'
+			OR contents LIKE '%'||#{search}||'%'
+			)
+			<if test="lastItemId != null">
+        	AND sort_num &gt; #{lastItemId}
+			</if>
+   		OFFSET ( #{page} - 1 ) * #{amount} ROWS
+      	FETCH NEXT #{amount} ROWS ONLY
+	</select> -->
+	
+	<!-- <select id="selectSearchPartyByQueryOrderByLike"
+		resultType="org.zerock.wego.domain.party.PartyViewSortVO">
+		SELECT *
+		FROM san_party_v_like
+		WHERE
+			(
+			title LIKE '%'||#{search}||'%'
+			OR contents LIKE '%'||#{search}||'%'
+			)
+			<if test="lastItemId != null">
+        	AND sort_num &gt; #{lastItemId}
+			</if>
+   		OFFSET ( #{page} - 1 ) * #{amount} ROWS
+      	FETCH NEXT #{amount} ROWS ONLY
+	</select> -->
+	
+	<select id="selectPartySuggestion"
+		resultType="org.zerock.wego.domain.party.PartyViewSortVO">
+		SELECT * 
+		FROM san_party_v_like
+		WHERE ROWNUM &lt;= 4
+	</select>  	
+
+	<select id="selectRandom10"
+		resultType="org.zerock.wego.domain.party.PartyViewVO">
+		SELECT *
+		FROM
+			(
+			SELECT *
+			FROM san_party_v
+			ORDER BY DBMS_RANDOM.RANDOM
+			)
+		WHERE ROWNUM &lt;= 10
+	</select>
+
+	<select id="selectSearchParty3ByQuery"
+		resultType="org.zerock.wego.domain.party.PartyViewVO">
+		SELECT *
+		FROM san_party_v
+		WHERE
+			(
+			title LIKE '%'||#{search}||'%'
+			OR contents LIKE '%'||#{search}||'%'
+			)
+			AND ROWNUM &lt;= 3
+	</select>
+	
+	<!-- *********** 식별자로 모집글 존재여부  ************ -->
+  	<select id="isExist" 
+  		resultType = "java.lang.Boolean">
+  		SELECT
+        CASE WHEN 
+        	EXISTS (
+            	SELECT 1 
+            	FROM san_party_tb
+            	WHERE san_party_id = #{partyId}
+        		) 
+        		THEN 1 ELSE 0 END AS exist
+    	FROM dual
+  	</select>
+  	
+  	<!-- *********** 식별자로 모집글 조회  ************ -->
+  	<select id="selectById" 
+  		resultType = "org.zerock.wego.domain.party.PartyViewVO">
+  		SELECT
+  			*
+  		FROM
+  			san_party_v
+  			
+  		<where>
+  		san_party_id = #{partyId}
+  		</where>
+  	</select>
+  	
+	<select id="selectUserIdByPartyId"
+		resultType="int">
+		SELECT user_id
+		FROM san_party_v
+		WHERE san_party_id = ${partyId}
+	</select>
+  	
+  	<insert id="insert" 
+		parameterType="org.zerock.wego.domain.party.PartyViewVO">
+		INSERT INTO
+			san_party_tb(
+				san_info_id, user_id, title, contents,
+				party_dt, party_max, items, condition
+				)
+			VALUES(
+				#{sanInfoId}, #{userId}, #{title}, #{contents},
+				#{partyDt}, #{partyMax}, #{items}, #{condition}
+			)
+			
+			<selectKey keyProperty="sanPartyId" resultType="int" order="AFTER">
+				SELECT max(san_party_id)
+				FROM san_party_tb
+			</selectKey>
+	</insert>
+	
+	<update id="update">
+		UPDATE san_party_tb
+		SET
+			san_info_id = #{sanInfoId},
+			title = #{title},
+			contents = #{contents},
+			party_dt = #{partyDt},
+			party_max = #{partyMax},
+			items = #{items},
+			condition = #{condition},
+			modified_dt = current_timestamp
+		WHERE
+			san_party_id = #{sanPartyId}
+	</update>
+	
+  	<!-- ************ 모집글 삭제 ************ -->
+  	<delete id="deleteById">
+  		DELETE
+  		FROM
+  			san_party_tb
+  			
+  		<where>
+  		san_party_id = #{partyId}
+  		</where>
+  	</delete>
+
+	<update id="visitCountUp">
+		UPDATE san_party_tb
+		SET
+			VISIT_CNT = VISIT_CNT + 1
+		WHERE
+			san_party_id = #{partyId}
+	</update>
+	
+</mapper>

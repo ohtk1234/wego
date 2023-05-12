@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:websocket="http://www.springframework.org/schema/websocket"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/websocket http://www.springframework.org/schema/websocket/spring-websocket-4.3.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+	<annotation-driven />
+
+	<resources mapping="/resources/**" location="/resources/" />
+	<resources mapping="/img/**" location="file:///opt/upload/" />
+
+	<view-resolvers>
+		<jsp prefix="/WEB-INF/views/" suffix=".jsp" />
+	</view-resolvers>
+
+	<context:component-scan
+		base-package="org.zerock.wego.controller" />
+	<context:component-scan
+		base-package="org.zerock.wego.exception" />
+	<context:component-scan
+		base-package="org.zerock.wego.interceptor" />
+	<context:component-scan
+		base-package="org.zerock.wego.socket" />
+	<context:component-scan
+			base-package="org.zerock.wego.smtp" />
+	<interceptors> 
+		<interceptor> 
+		<!-- =================================================================================== -->
+		<!-- 로그인 테스트 하고 싶은 페이지의 url 추가 -->
+			<mapping path="/**" />
+		<!-- =================================================================================== -->
+			
+			<exclude-mapping path="/"/>
+			<exclude-mapping path="/resources/**"/>
+			<exclude-mapping path="/img/**"/>
+			<exclude-mapping path="/login/**"/>
+			<exclude-mapping path="/info/**"/> 
+			<exclude-mapping path="/search/**"/> 
+			
+			<beans:ref bean="authInterceptor"/> 
+		</interceptor> 
+
+		<interceptor> 	
+			<mapping path="/**" />
+			
+			<beans:ref bean="afterLoginInterceptor"/> 
+		</interceptor>
+		
+		<interceptor> 
+			<mapping path="/login/logout" />
+			
+			<beans:ref bean="logoutInterceptor"/> 
+		</interceptor>
+		
+		<interceptor> 	
+			<mapping path="/login/google" />
+			<mapping path="/login/naver" />
+			
+			<beans:ref bean="loginInterceptor"/> 
+		</interceptor>
+		
+		<interceptor> 
+			<mapping path="/party/register" />
+			<mapping path="/party/**/join" />
+			<mapping path="/review/register"/>
+			<mapping path="/comment/register" />
+			<mapping path="/comment/reply" />
+			
+			<beans:ref bean="postInterceptor"/> 
+		</interceptor>
+		
+	</interceptors>
+
+	<!-- 파일 업로드를 위한 빈 설정 -->
+
+	<beans:bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<beans:property name="defaultEncoding" value="UTF-8" />
+		<beans:property name="maxInMemorySize" value="20971520" />
+		<beans:property name="maxUploadSize" value="20971520" />
+		<beans:property name="maxUploadSizePerFile"
+			value="20971520" />
+		<beans:property name="preserveFilename" value="true" />
+		<beans:property name="uploadTempDir" value="file:/opt/upload/temp" />
+	</beans:bean>
+
+	<!-- websocket handler -->
+	<beans:bean id="NotificationWebSocketHandler"
+		class="org.zerock.wego.socket.NotificationWebSocketHandler"/>
+	<websocket:handlers>
+		<websocket:mapping handler="NotificationWebSocketHandler" path="/notification" />
+		<websocket:handshake-interceptors>
+	         <beans:bean class="org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor"/>
+	      </websocket:handshake-interceptors>
+		<websocket:sockjs websocket-enabled="true"/>
+	</websocket:handlers>
+</beans:beans>

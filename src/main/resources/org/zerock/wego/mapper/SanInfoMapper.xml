@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.zerock.wego.mapper.SanInfoMapper">
+	
+	<select id="selectTotalCountByQuery"
+		resultType="java.lang.Double">
+		SELECT count(san_info_id)
+		FROM san_info_v
+		WHERE
+			san_info_id > 0
+			AND
+			(
+			san_name LIKE '%'||#{query}||'%'
+			OR details LIKE '%'||#{query}||'%'
+			)
+	</select>
+	
+	<select id="selectAll"
+		resultType="org.zerock.wego.domain.info.SanInfoViewVO">
+		SELECT * 
+		FROM san_info_v
+	</select>
+	
+	<select id="selectAllOrderByAbc"
+		resultType="org.zerock.wego.domain.info.SanInfoViewSortVO">
+		SELECT * 
+		FROM san_info_v_abc
+		<if test="sortNum != null">
+        	WHERE sort_num &gt; #{sortNum}
+		</if>
+   		OFFSET ( #{page} - 1 ) * #{amount} ROWS
+      	FETCH NEXT #{amount} ROWS ONLY
+	</select>
+	
+	<select id="selectAllOrderByLike"
+		resultType="org.zerock.wego.domain.info.SanInfoViewSortVO">
+		SELECT * 
+		FROM san_info_v_like
+		<if test="sortNum != null">
+        	WHERE sort_num &gt; #{sortNum}
+		</if>
+   		OFFSET ( #{page} - 1 ) * #{amount} ROWS
+      	FETCH NEXT #{amount} ROWS ONLY
+	</select>
+	
+	<select id="selectSearchSanInfoByQueryOrderByAbc"
+		resultType="org.zerock.wego.domain.info.SanInfoViewSortVO">
+		SELECT *
+		FROM san_info_v_abc
+		WHERE
+			(
+			san_name LIKE '%'||#{query}||'%'
+			OR details LIKE '%'||#{query}||'%'
+			)
+			<if test="sortNum != null">
+        	AND sort_num &gt; #{sortNum}
+			</if>
+   		OFFSET ( #{page} - 1 ) * #{amount} ROWS
+      	FETCH NEXT #{amount} ROWS ONLY
+	</select>
+	
+	<!-- <select id="selectSearchSanInfoByQueryOrderByLike"
+		resultType="org.zerock.wego.domain.info.SanInfoViewSortVO">
+		SELECT *
+		FROM san_info_v_like
+		WHERE
+			(
+			san_name LIKE '%'||#{query}||'%'
+			OR details LIKE '%'||#{query}||'%'
+			)
+			<if test="sortNum != null">
+        	AND sort_num &gt; #{sortNum}
+			</if>
+   		OFFSET ( #{page} - 1 ) * #{amount} ROWS
+      	FETCH NEXT #{amount} ROWS ONLY
+	</select> -->
+	
+	<select id="selectSanInfoSuggestion"
+		resultType="org.zerock.wego.domain.info.SanInfoViewSortVO">
+		SELECT * 
+		FROM san_info_v_like
+		WHERE ROWNUM &lt;= 4
+	</select>
+
+	<select id="selectRandom10"
+		resultType="org.zerock.wego.domain.info.SanInfoViewVO">
+		SELECT *
+		FROM
+			(
+			SELECT *
+			FROM san_info_v
+			ORDER BY DBMS_RANDOM.RANDOM
+			)
+		WHERE ROWNUM &lt;= 10
+	</select>
+
+	<select id="selectById"
+		resultType="org.zerock.wego.domain.info.SanInfoViewVO">
+		SELECT *
+		FROM san_info_v
+		WHERE san_info_id = #{sanInfoId}
+	</select>
+
+	<select id="selectIdBySanName" 
+		resultType="Integer">
+		SELECT san_info_id
+		FROM san_info_v
+		WHERE san_name = #{sanName}
+	</select>
+	
+	<select id="selectSearchSanInfo3ByQuery"
+		resultType="org.zerock.wego.domain.info.SanInfoViewVO">
+		SELECT *
+		FROM san_info_v
+		WHERE
+			(
+			san_name LIKE '%'||#{search}||'%'
+			OR details LIKE '%'||#{search}||'%'
+			)
+			AND ROWNUM &lt;= 3
+	</select>
+
+</mapper>
